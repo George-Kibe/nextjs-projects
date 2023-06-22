@@ -1,5 +1,3 @@
-"use client"
-
 import AuthWrapper from "../components/AuthWrapper";
 import Companies from "../components/Landing/Companies";
 import Everything from "../components/Landing/Everything";
