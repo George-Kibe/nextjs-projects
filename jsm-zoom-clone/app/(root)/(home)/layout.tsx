@@ -1,6 +1,13 @@
 import NavBar from '@/components/NavBar'
 import Sidebar from '@/components/Sidebar'
+import { Metadata } from 'next';
 import React, { ReactNode } from 'react'
+
+export const metadata: Metadata = {
+  title: "RealZoom",
+  description: "Video Calling application",
+  icons: {icon: '/icons/logo.svg'}
+};
 
 const HomeLayout = ({children}:{ children: ReactNode}) => {
   return (

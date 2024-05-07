@@ -1,6 +1,13 @@
 
 import StreamVideoProvider from '@/providers/StreamClientProvider'
+import { Metadata } from 'next';
 import React, { ReactNode } from 'react'
+
+export const metadata: Metadata = {
+  title: "RealZoom",
+  description: "Video Calling application",
+  icons: {icon: '/icons/logo.svg'}
+};
 
 const RootLayout = ({children}:{ children: ReactNode}) => {
   return (
