@@ -1,1 +1,0 @@
-﻿# nextjs-jumpx-template
