@@ -33,7 +33,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <header className="border-b border-neutral-200 dark:border-neutral-800">
           <nav className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 text-sm whitespace-nowrap sm:gap-6">
             <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
-              <Image src="/logo.png" alt="Innercore Geoconsultants" width={40} height={36} priority className="rounded-sm" />
+              <Image src="/logo.png" alt="Innercore Geoconsultants" width={40} height={36} priority className="h-9 w-10 rounded-sm" />
               <span>
                 <span className="hidden sm:inline">Innercore </span>Boreholes
               </span>

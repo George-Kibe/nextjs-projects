@@ -1,5 +1,7 @@
 "use client";
 
+// Also imported in globals.css; importing here too guarantees the styles ship with the map itself.
+import "leaflet/dist/leaflet.css";
 import Link from "next/link";
 import { useEffect } from "react";
 import { CircleMarker, LayerGroup, LayersControl, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
@@ -34,7 +36,7 @@ export default function LeafletMap({ boreholes, className = "", height = "70vh",
     >
       {/* Both basemaps are free and need no API key. */}
       <LayersControl position="topright">
-        <LayersControl.BaseLayer checked name="Light">
+        <LayersControl.BaseLayer name="Light">
           <LayerGroup>
             <TileLayer
               attribution="Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors"
@@ -49,7 +51,7 @@ export default function LeafletMap({ boreholes, className = "", height = "70vh",
             />
           </LayerGroup>
         </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Streets">
+        <LayersControl.BaseLayer checked name="Streets">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
