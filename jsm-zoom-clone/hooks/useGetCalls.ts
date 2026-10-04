@@ -30,6 +30,7 @@ export const useGetCalls = () => {
         setCalls(calls);
       } catch (error) {
         console.error(error);
+        setCalls([]); // settle on "no calls" instead of loading forever
       } finally {
         setIsLoading(false);
       }

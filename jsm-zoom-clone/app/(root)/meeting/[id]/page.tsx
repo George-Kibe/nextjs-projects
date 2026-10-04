@@ -6,12 +6,11 @@ import MeetingSetup from '@/components/MeetingSetup'
 import { useGetCallById } from '@/hooks/useGetCallById'
 import { useUser } from '@clerk/nextjs'
 import { StreamCall, StreamTheme } from '@stream-io/video-react-sdk'
-import { Loader } from 'lucide-react'
-import React, { useState } from 'react'
+import Loader from '@/components/Loader'
+import { use, useState } from 'react'
 
-const Meeting = ({params}: { params: {id: string}}) => {
-  const {id} = params;
-  // console.log("id: ", id)
+const Meeting = ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = use(params);
   const {user, isLoaded} = useUser();
   const [setupComplete, setSetupComplete] = useState(false);
   const { call, isCallLoading } = useGetCallById(id);

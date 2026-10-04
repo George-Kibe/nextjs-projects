@@ -13,7 +13,6 @@ interface MeetingModalProps {
   children?: ReactNode;
   handleClick?: () => void;
   buttonText?: string;
-  instantMeeting?: boolean;
   image?: string;
   buttonClassName?: string;
   buttonIcon?: string;
@@ -27,7 +26,6 @@ const MeetingModal = ({
   children,
   handleClick,
   buttonText,
-  instantMeeting,
   image,
   buttonClassName,
   buttonIcon,
@@ -46,9 +44,10 @@ const MeetingModal = ({
           </h1>
           {children}
           <Button
-            className={
-              "bg-blue-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-            }
+            className={cn(
+              "bg-blue-1 focus-visible:ring-0 focus-visible:ring-offset-0",
+              buttonClassName
+            )}
             onClick={handleClick}
           >
             {buttonIcon && (

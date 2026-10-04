@@ -7,12 +7,15 @@ import { useGetCalls } from '@/hooks/useGetCalls';
 import MeetingCard from './MeetingCard';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from './ui/use-toast';
 
 const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   const router = useRouter();
+  const { toast } = useToast();
   const { endedCalls, upcomingCalls, callRecordings, isLoading } =
     useGetCalls();
   const [recordings, setRecordings] = useState<CallRecording[]>([]);
+  const [isLoadingRecordings, setIsLoadingRecordings] = useState(type === 'recordings');
 
   const getCalls = () => {
     switch (type) {
@@ -41,24 +44,28 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   };
 
   useEffect(() => {
+    // callRecordings is undefined until the call list has loaded.
+    if (type !== 'recordings' || !callRecordings) return;
+
     const fetchRecordings = async () => {
-      const callData = await Promise.all(
-        callRecordings?.map((meeting) => meeting.queryRecordings()) ?? [],
-      );
+      try {
+        const callData = await Promise.all(
+          callRecordings.map((meeting) => meeting.queryRecordings()),
+        );
 
-      const recordings = callData
-        .filter((call) => call.recordings.length > 0)
-        .flatMap((call) => call.recordings);
-
-      setRecordings(recordings);
+        setRecordings(callData.flatMap((call) => call.recordings));
+      } catch (error) {
+        console.error(error);
+        toast({ title: 'Failed to load recordings' });
+      } finally {
+        setIsLoadingRecordings(false);
+      }
     };
 
-    if (type === 'recordings') {
-      fetchRecordings();
-    }
-  }, [type, callRecordings]);
+    fetchRecordings();
+  }, [type, callRecordings, toast]);
 
-  if (isLoading) return <Loader />;
+  if (isLoading || (type === 'recordings' && isLoadingRecordings)) return <Loader />;
 
   const calls = getCalls();
   const noCallsMessage = getNoCallsMessage();
@@ -68,7 +75,7 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
       {calls && calls.length > 0 ? (
         calls.map((meeting: Call | CallRecording) => (
           <MeetingCard
-            key={(meeting as Call).id}
+            key={type === 'recordings' ? (meeting as CallRecording).url : (meeting as Call).id}
             icon={
               type === 'ended'
                 ? '/icons/previous.svg'
@@ -82,8 +89,9 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
               'No Description'
             }
             date={
-              (meeting as Call).state?.startsAt?.toLocaleString() ||
-              (meeting as CallRecording).start_time?.toLocaleString()
+              type === 'recordings'
+                ? new Date((meeting as CallRecording).start_time).toLocaleString()
+                : (meeting as Call).state?.startsAt?.toLocaleString() ?? ''
             }
             isPreviousMeeting={type === 'ended'}
             link={
@@ -95,7 +103,7 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
             buttonText={type === 'recordings' ? 'Play' : 'Start'}
             handleClick={
               type === 'recordings'
-                ? () => router.push(`${(meeting as CallRecording).url}`)
+                ? () => window.open((meeting as CallRecording).url, '_blank', 'noopener,noreferrer')
                 : () => router.push(`/meeting/${(meeting as Call).id}`)
             }
           />

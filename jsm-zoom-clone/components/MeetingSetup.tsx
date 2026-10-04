@@ -9,6 +9,7 @@ import {
 
 import Alert from './Alert';
 import { Button } from './ui/button';
+import { useToast } from './ui/use-toast';
 
 const MeetingSetup = ({
   setIsSetupComplete,
@@ -33,16 +34,33 @@ const MeetingSetup = ({
 
   // https://getstream.io/video/docs/react/ui-cookbook/replacing-call-controls/
   const [isMicCamToggled, setIsMicCamToggled] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
+    // These reject when the device is missing or permission is denied;
+    // the preview simply stays off in that case.
     if (isMicCamToggled) {
-      call.camera.disable();
-      call.microphone.disable();
+      call.camera.disable().catch(console.error);
+      call.microphone.disable().catch(console.error);
     } else {
-      call.camera.enable();
-      call.microphone.enable();
+      call.camera.enable().catch(console.error);
+      call.microphone.enable().catch(console.error);
     }
   }, [isMicCamToggled, call.camera, call.microphone]);
+
+  const joinCall = async () => {
+    if (isJoining) return;
+    setIsJoining(true);
+    try {
+      await call.join();
+      setIsSetupComplete(true);
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'Could not join the meeting, please try again' });
+      setIsJoining(false);
+    }
+  };
 
   if (callTimeNotArrived)
     return (
@@ -76,13 +94,10 @@ const MeetingSetup = ({
       </div>
       <Button
         className="rounded-md bg-green-500 px-4 py-2.5"
-        onClick={() => {
-          call.join();
-
-          setIsSetupComplete(true);
-        }}
+        onClick={joinCall}
+        disabled={isJoining}
       >
-        Join meeting
+        {isJoining ? 'Joining…' : 'Join meeting'}
       </Button>
     </div>
   );

@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import MobileNav from './MobileNav'
-import { SignedIn, UserButton } from '@clerk/nextjs'
+import { Show, UserButton } from '@clerk/nextjs'
 
 const NavBar = () => {
   return (
@@ -12,7 +12,7 @@ const NavBar = () => {
           src="/icons/logo.svg"
           width={32}
           height={32}
-          alt="yoom logo"
+          alt="RealZoom logo"
           className="max-sm:size-10"
         />
         <p className="text-[26px] font-extrabold text-white max-sm:hidden">
@@ -20,9 +20,9 @@ const NavBar = () => {
         </p>
       </Link>
       <div className="flex-between gap-5">
-        <SignedIn>
-          <UserButton afterSignOutUrl="/sign-in" />
-        </SignedIn>
+        <Show when="signed-in">
+          <UserButton />
+        </Show>
 
         <MobileNav />
       </div>

@@ -1,12 +1,67 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* ======== theme (brand colours & images) ======== */
+@theme {
+  --color-dark-1: #1c1f2e;
+  --color-dark-2: #161925;
+  --color-dark-3: #252a41;
+  --color-dark-4: #1e2757;
+
+  --color-blue-1: #0e78f9;
+
+  --color-sky-1: #c9ddff;
+  --color-sky-2: #ecf0ff;
+  --color-sky-3: #f5fcff;
+
+  --color-orange-1: #ff742e;
+  --color-purple-1: #830ef9;
+  --color-yellow-1: #f9a90e;
 }
+
+/*
+  Base styles. These must live in a layer: unlayered rules beat every
+  layered rule in Tailwind v4, so an unlayered `*` reset would override
+  all padding/margin utilities.
+*/
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Tailwind v3 defaults that v4 changed (border colour, button cursor). */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility flex-center {
+  @apply flex items-center justify-center;
+}
+
+@utility flex-between {
+  @apply flex items-center justify-between;
+}
+
+@utility bg-hero {
+  background-image: url('/images/hero-background.png');
+}
+
+/*
+  Third-party overrides are intentionally unlayered so they win over the
+  (unlayered) Stream and Clerk stylesheets.
+*/
 
 /* ======== stream css overrides ======== */
 .str-video__call-stats {
@@ -53,11 +108,11 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* ==== clerk class override ===== */
-
-.cl-userButtonPopoverActionButtonIcon {
-  color: white;
-}
+/*
+  ==== clerk class override =====
+  Clerk renders light-themed cards, so don't force white text on its
+  components (it made the UserButton's "Sign out" invisible).
+*/
 
 .cl-logoBox {
   height: 40px;
@@ -71,26 +126,9 @@
   border: 3px solid #565761;
 }
 
-.cl-internal-wkkub3 {
-  color: white;
-}
-.cl-userButtonPopoverActionButton {
-  color: white;
-}
-
 /* =============================== */
 
-@layer utilities {
-  .flex-center {
-    @apply flex justify-center items-center;
-  }
-
-  .flex-between {
-    @apply flex justify-between items-center;
-  }
-}
-
-/* animation */
+/* animation (participants panel) — unlayered so it beats the `hidden` utility */
 
 .show-block {
   width: 100%;

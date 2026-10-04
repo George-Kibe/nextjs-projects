@@ -1,23 +1,18 @@
+import { auth } from '@clerk/nextjs/server';
+import { ReactNode } from 'react';
 
-import StreamVideoProvider from '@/providers/StreamClientProvider'
-import { Metadata } from 'next';
-import React, { ReactNode } from 'react'
+import StreamVideoProvider from '@/providers/StreamClientProvider';
 
-export const metadata: Metadata = {
-  title: "RealZoom",
-  description: "Video Calling application",
-  icons: {icon: '/icons/logo.svg'}
-};
+// Every route in the (root) group requires a signed-in user.
+// Signed-out visitors are redirected to the Clerk sign-in page.
+const RootLayout = async ({ children }: { children: ReactNode }) => {
+  await auth.protect();
 
-const RootLayout = ({children}:{ children: ReactNode}) => {
   return (
     <main>
-      <StreamVideoProvider>
-        {children}
-      </StreamVideoProvider>
-        
-      </main>
-  )
-}
+      <StreamVideoProvider>{children}</StreamVideoProvider>
+    </main>
+  );
+};
 
-export default RootLayout
+export default RootLayout;
