@@ -2,54 +2,54 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { COUNTRY, KENYAN_COUNTIES } from "@/lib/counties";
 import { FIELDS } from "@/lib/fields";
-import { validateBorehole, type Borehole, type BoreholeInput, type FieldErrors } from "@/lib/validation";
+import { extraFields, KINDS, viewHref, type ExtraFieldKey, type KindKey } from "@/lib/kinds";
+import { siteCode, validateSite, type FieldErrors, type Site, type SiteFields } from "@/lib/validation";
 
-type Values = Record<Exclude<keyof BoreholeInput, "country">, string>;
+/** Form values are strings; "code" holds the kind's ID field (boreholeId / mineralId). */
+type ValueKey = Exclude<keyof SiteFields, "country"> | ExtraFieldKey | "code";
+type Values = Record<ValueKey, string>;
 
-const EMPTY: Values = {
-  boreholeId: "",
-  latitude: "",
-  longitude: "",
-  elevation: "",
-  depth: "",
-  formation: "",
-  yield: "",
-  location: "",
-  county: "",
-};
+const SHARED_KEYS = ["latitude", "longitude", "elevation", "depth", "formation", "yield", "location", "county"] as const;
 
-function toValues(b?: Borehole): Values {
-  if (!b) return EMPTY;
-  return Object.fromEntries(Object.keys(EMPTY).map((k) => [k, String(b[k as keyof Values])])) as Values;
+function toValues(kind: KindKey, site?: Site): Values {
+  const values = { code: site ? siteCode(kind, site) : "" } as Values;
+  for (const k of SHARED_KEYS) values[k] = site ? String(site[k]) : "";
+  for (const { key } of extraFields(kind)) values[key] = site?.[key] ?? "";
+  return values;
 }
 
-export default function BoreholeForm({ borehole }: { borehole?: Borehole }) {
+export default function SiteForm({ kind, site }: { kind: KindKey; site?: Site }) {
+  const { idField, idLabel, idPlaceholder, singular } = KINDS[kind];
   const router = useRouter();
-  const [values, setValues] = useState<Values>(() => toValues(borehole));
+  const [values, setValues] = useState<Values>(() => toValues(kind, site));
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [pending, setPending] = useState(false);
 
-  function set(field: keyof Values, value: string) {
-    setValues((v) => ({ ...v, [field]: value }));
-    if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
+  const errorKey = (name: ValueKey) => (name === "code" ? idField : name);
+
+  function set(name: ValueKey, value: string) {
+    setValues((v) => ({ ...v, [name]: value }));
+    const key = errorKey(name);
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError("");
-    const result = validateBorehole(values);
+    const { code, ...shared } = values;
+    const result = validateSite(kind, { ...shared, [idField]: code });
     if (!result.ok) {
       setErrors(result.errors);
       return;
     }
 
     setPending(true);
-    const res = await fetch(borehole ? `/api/boreholes/${borehole._id}` : "/api/boreholes", {
-      method: borehole ? "PUT" : "POST",
+    const res = await fetch(site ? `/api/${kind}/${site._id}` : `/api/${kind}`, {
+      method: site ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(result.data),
     }).catch(() => null);
@@ -65,13 +65,15 @@ export default function BoreholeForm({ borehole }: { borehole?: Borehole }) {
       setFormError(body?.error ?? "Could not save. Please try again.");
       return;
     }
-    router.push(`/boreholes/${body._id}`);
+    router.push(`/${kind}/${body._id}`);
     router.refresh();
   }
 
-  function field(name: keyof Values, props: React.InputHTMLAttributes<HTMLInputElement> = {}) {
-    const { label, unit } = FIELDS[name];
-    const error = errors[name];
+  function field(name: ValueKey, props: React.InputHTMLAttributes<HTMLInputElement> = {}) {
+    const extra = extraFields(kind).find((f) => f.key === name);
+    const { label, unit } =
+      name === "code" ? { label: idLabel, unit: undefined } : extra ? { label: extra.label, unit: undefined } : FIELDS[name as keyof typeof FIELDS];
+    const error = errors[errorKey(name)];
     return (
       <div>
         <label htmlFor={name} className="label">
@@ -92,12 +94,14 @@ export default function BoreholeForm({ borehole }: { borehole?: Borehole }) {
   }
 
   const num = { type: "number", step: "any", inputMode: "decimal" } as const;
+  const extras = extraFields(kind);
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-8">
-      <fieldset className="grid gap-4 sm:grid-cols-2">
+      <fieldset className={`grid gap-4 ${extras.length ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         <legend className="mb-3 text-sm font-medium">Identification</legend>
-        {field("boreholeId", { placeholder: "e.g. BH-001", autoComplete: "off" })}
+        {field("code", { placeholder: idPlaceholder, autoComplete: "off" })}
+        {extras.map((f) => <Fragment key={f.key}>{field(f.key, { placeholder: f.placeholder })}</Fragment>)}
         {field("formation", { placeholder: "e.g. Basalt, Volcanic tuff" })}
       </fieldset>
 
@@ -109,7 +113,7 @@ export default function BoreholeForm({ borehole }: { borehole?: Borehole }) {
       </fieldset>
 
       <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-3 text-sm font-medium">Hydrogeology</legend>
+        <legend className="mb-3 text-sm font-medium">Measurements</legend>
         {field("depth", { ...num, min: 0, placeholder: "120" })}
         {field("yield", { ...num, min: 0, placeholder: "4.5" })}
       </fieldset>
@@ -147,9 +151,9 @@ export default function BoreholeForm({ borehole }: { borehole?: Borehole }) {
 
       <div className="flex gap-2 border-t border-neutral-200 pt-6 dark:border-neutral-800">
         <button type="submit" disabled={pending} className="btn btn-primary">
-          {pending ? "Saving…" : borehole ? "Save changes" : "Create borehole"}
+          {pending ? "Saving…" : site ? "Save changes" : `Create ${singular}`}
         </button>
-        <Link href={borehole ? `/boreholes/${borehole._id}` : "/"} className="btn">
+        <Link href={site ? `/${kind}/${site._id}` : viewHref("/", kind)} className="btn">
           Cancel
         </Link>
       </div>

@@ -1,15 +1,29 @@
+import Link from "next/link";
 import { Suspense } from "react";
-import BoreholeTable from "@/components/BoreholeTable";
+import KindSwitch from "@/components/KindSwitch";
+import SiteTable from "@/components/SiteTable";
 import { isAdmin } from "@/lib/auth";
+import { DEFAULT_KIND, KINDS, parseKind } from "@/lib/kinds";
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const raw = (await searchParams).kind;
+  const kind = parseKind(typeof raw === "string" ? raw : null) ?? DEFAULT_KIND;
   const admin = await isAdmin();
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Boreholes</h1>
+      <div className="flex flex-wrap items-center gap-4">
+        <h1 className="text-xl font-semibold tracking-tight">{KINDS[kind].title}</h1>
+        <KindSwitch path="/" active={kind} />
+        {admin && (
+          <Link href={`/${kind}/new`} className="btn btn-primary ml-auto">
+            New {KINDS[kind].singular}
+          </Link>
+        )}
+      </div>
       <Suspense>
-        <BoreholeTable admin={admin} />
+        {/* Keyed by kind so search and paging state reset when switching. */}
+        <SiteTable key={kind} kind={kind} admin={admin} />
       </Suspense>
     </div>
   );

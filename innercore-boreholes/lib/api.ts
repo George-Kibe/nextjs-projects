@@ -1,5 +1,6 @@
 import { isValidObjectId, mongo } from "mongoose";
 import { isAdmin } from "./auth";
+import { capitalize, KINDS, type KindKey } from "./kinds";
 
 export function jsonError(status: number, error: string, extra?: Record<string, unknown>) {
   return Response.json({ error, ...extra }, { status });
@@ -10,15 +11,20 @@ export async function requireAdmin() {
   return (await isAdmin()) ? null : jsonError(401, "Login required");
 }
 
-export function invalidId(id: string) {
-  return isValidObjectId(id) ? null : jsonError(404, "Borehole not found");
+export function notFound(kind: KindKey) {
+  return jsonError(404, `${capitalize(KINDS[kind].singular)} not found`);
+}
+
+export function invalidId(kind: KindKey, id: string) {
+  return isValidObjectId(id) ? null : notFound(kind);
 }
 
 /** Maps known database errors to HTTP responses. */
-export function handleDbError(err: unknown) {
+export function handleDbError(kind: KindKey, err: unknown) {
   if (err instanceof mongo.MongoServerError && err.code === 11000) {
-    return jsonError(409, "A borehole with this ID already exists", {
-      fields: { boreholeId: "Already in use" },
+    const { singular, idField } = KINDS[kind];
+    return jsonError(409, `A ${singular} with this ID already exists`, {
+      fields: { [idField]: "Already in use" },
     });
   }
   console.error(err);

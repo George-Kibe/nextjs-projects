@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { isAdmin } from "@/lib/auth";
+import { Suspense } from "react";
 import LogoutButton from "@/components/LogoutButton";
+import NavLinks from "@/components/NavLinks";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Innercore Boreholes",
-  description: "Borehole records: location, depth, formation and yield",
+  title: "Innercore Geoconsultants",
+  description: "Borehole and mineral records: location, depth, formation and yield",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -35,24 +37,22 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
               <Image src="/logo.png" alt="Innercore Geoconsultants" width={40} height={36} priority className="h-9 w-10 rounded-sm" />
               <span>
-                <span className="hidden sm:inline">Innercore </span>Boreholes
+                Innercore<span className="hidden sm:inline"> Geoconsultants</span>
               </span>
             </Link>
-            <Link href="/" className="muted hover:text-foreground">
-              List
-            </Link>
-            <Link href="/map" className="muted hover:text-foreground">
-              Map
-            </Link>
+            <Suspense
+              fallback={
+                <>
+                  <Link href="/" className="muted hover:text-foreground">List</Link>
+                  <Link href="/map" className="muted hover:text-foreground">Map</Link>
+                </>
+              }
+            >
+              <NavLinks />
+            </Suspense>
             <div className="ml-auto flex items-center gap-2">
               {admin ? (
-                <>
-                  <Link href="/boreholes/new" className="btn btn-primary">
-                    <span className="sm:hidden">New</span>
-                    <span className="hidden sm:inline">New borehole</span>
-                  </Link>
-                  <LogoutButton />
-                </>
+                <LogoutButton />
               ) : (
                 <Link href="/login" className="btn">
                   Log in

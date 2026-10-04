@@ -6,25 +6,27 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { CircleMarker, LayerGroup, LayersControl, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
 import { formatNumber } from "@/lib/fields";
-import type { Borehole } from "@/lib/validation";
+import { KINDS, type KindKey } from "@/lib/kinds";
+import { siteCode, type Site } from "@/lib/validation";
 
-export type MapProps = { boreholes: Borehole[]; className?: string; height?: string; zoom?: number };
+export type MapProps = { kind: KindKey; sites: Site[]; className?: string; height?: string; zoom?: number };
 
 const KENYA_CENTER: [number, number] = [0.2, 37.9];
 
-function FitBounds({ boreholes, zoom }: { boreholes: Borehole[]; zoom: number }) {
+function FitBounds({ sites, zoom }: { sites: Site[]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
     // The container can change size after Leaflet measures it (layout, fonts), which leaves the map blank.
     map.invalidateSize();
-    if (boreholes.length === 1) map.setView([boreholes[0].latitude, boreholes[0].longitude], zoom);
-    else if (boreholes.length > 1)
-      map.fitBounds(boreholes.map((b) => [b.latitude, b.longitude]), { padding: [30, 30], maxZoom: 12 });
-  }, [map, boreholes, zoom]);
+    if (sites.length === 1) map.setView([sites[0].latitude, sites[0].longitude], zoom);
+    else if (sites.length > 1)
+      map.fitBounds(sites.map((s) => [s.latitude, s.longitude]), { padding: [30, 30], maxZoom: 12 });
+  }, [map, sites, zoom]);
   return null;
 }
 
-export default function LeafletMap({ boreholes, className = "", height = "70vh", zoom = 6 }: MapProps) {
+export default function LeafletMap({ kind, sites, className = "", height = "70vh", zoom = 6 }: MapProps) {
+  const { color } = KINDS[kind];
   return (
     <MapContainer
       center={KENYA_CENTER}
@@ -59,19 +61,20 @@ export default function LeafletMap({ boreholes, className = "", height = "70vh",
           />
         </LayersControl.BaseLayer>
       </LayersControl>
-      <FitBounds boreholes={boreholes} zoom={zoom} />
-      {boreholes.map((b) => (
+      <FitBounds sites={sites} zoom={zoom} />
+      {sites.map((b) => (
         <CircleMarker
           key={b._id}
           center={[b.latitude, b.longitude]}
           radius={7}
-          pathOptions={{ color: "#fff", weight: 2, fillColor: "#2563eb", fillOpacity: 0.9 }}
+          pathOptions={{ color: "#fff", weight: 2, fillColor: color, fillOpacity: 0.9 }}
         >
           <Popup>
             <div className="space-y-0.5 text-xs">
-              <Link href={`/boreholes/${b._id}`} className="font-mono text-sm font-semibold">
-                {b.boreholeId}
+              <Link href={`/${kind}/${b._id}`} className="font-mono text-sm font-semibold">
+                {siteCode(kind, b)}
               </Link>
+              {b.name && <div className="font-semibold">{b.name}</div>}
               <div>
                 {b.location}, {b.county}
               </div>

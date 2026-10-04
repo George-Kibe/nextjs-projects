@@ -1,8 +1,7 @@
-import type { BoreholeInput } from "./validation";
+import type { SiteFields } from "./validation";
 
-/** Display labels and units, shared by the table, form and detail view. */
-export const FIELDS: Record<keyof BoreholeInput, { label: string; unit?: string }> = {
-  boreholeId: { label: "Borehole ID" },
+/** Display labels and units for the shared fields, used by the table, form and detail view. */
+export const FIELDS: Record<keyof SiteFields, { label: string; unit?: string }> = {
   latitude: { label: "Latitude", unit: "°" },
   longitude: { label: "Longitude", unit: "°" },
   elevation: { label: "Elevation", unit: "m asl" },

@@ -9,6 +9,6 @@ const LeafletMap = dynamic(() => import("./LeafletMap"), {
   loading: () => <div className="h-80 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-900" />,
 });
 
-export default function BoreholeMap(props: MapProps) {
+export default function SiteMap(props: MapProps) {
   return <LeafletMap {...props} />;
 }
